@@ -10,7 +10,7 @@ jobs:
 
     defaults:
       run:
-        working-directory: lasttaximan/lasttaximan
+        working-directory: lasttaximan
 
     steps:
     - name: Checkout code
