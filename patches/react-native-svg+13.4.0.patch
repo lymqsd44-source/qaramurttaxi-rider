@@ -1,12 +1,39 @@
 diff --git a/node_modules/react-native-svg/android/build.gradle b/node_modules/react-native-svg/android/build.gradle
-index a4a57b5..866a534 100644
+index a4a57b5..1ee2edb 100644
 --- a/node_modules/react-native-svg/android/build.gradle
 +++ b/node_modules/react-native-svg/android/build.gradle
-@@ -87,7 +87,6 @@ repositories {
+@@ -38,7 +38,7 @@ def safeExtGet(prop, fallback) {
+ }
+ 
+ android {
+-    compileSdkVersion safeExtGet('compileSdkVersion', 28)
++    compileSdkVersion safeExtGet('compileSdkVersion', 35)  // Updated to match your project
+ 
+     // Used to override the NDK path/version on internal CI or by allowing
+     // users to customize the NDK path/version from their root project (e.g. for M1 support)
+@@ -50,9 +50,9 @@ android {
+     }
+ 
+     defaultConfig {
+-        minSdkVersion safeExtGet('minSdkVersion', 16)
++        minSdkVersion safeExtGet('minSdkVersion', 24)  // Updated to match your project
+         //noinspection OldTargetApi
+-        targetSdkVersion safeExtGet('targetSdkVersion', 28)
++        targetSdkVersion safeExtGet('targetSdkVersion', 34)  // Updated to match your project
+         buildConfigField "boolean", "IS_NEW_ARCHITECTURE_ENABLED", isNewArchitectureEnabled().toString()
+     }
+     lintOptions {
+@@ -87,10 +87,12 @@ repositories {
  
  dependencies {
      if (isNewArchitectureEnabled()) {
 -        implementation project(":ReactAndroid")
++        // No extra dependency needed for Fabric
      } else {
          implementation 'com.facebook.react:react-native:+'
      }
++
++    // REMOVED: implementation project(':ReactAndroid') – this line is obsolete in RN 0.71+ and causes build failure
+ }
+ 
+ if (isNewArchitectureEnabled()) {
