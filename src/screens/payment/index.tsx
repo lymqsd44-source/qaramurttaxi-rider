@@ -17,7 +17,6 @@ import { initializeApp } from "firebase/app";
 import { getFirestore, doc, onSnapshot } from "firebase/firestore";
 import { firebaseConfig } from "../../../firebase";
 import { Edit, Shield } from "@src/utils/icons";
-//import NativeAdComponent from "@src/commonComponent/ads/google/NativeAdCard";
 
 const app = initializeApp(firebaseConfig);
 const db = getFirestore(app);
@@ -45,39 +44,33 @@ export function Payment() {
 
   const snapPoints = useMemo(
     () => {
-      // Base height - slightly decreased from 45 to 42
-      let baseHeight = 42; // Percentage
+      let baseHeight = 42;
 
-      // Add height for service category other than 'ride'
       if (rideDatas?.service?.service_category != 'ride') {
-        baseHeight = 37.5; // Decreased from 50 to 45
+        baseHeight = 37.5;
       }
 
-      // Add height for each stop (max 3 stops) - decreased from 12 to 10% per stop
       const locationsCount = rideDatas?.locations?.length || 0;
-      const stopsCount = Math.max(0, locationsCount - 2); // Exclude pickup and destination
-      const stopsHeight = Math.min(stopsCount, 3) * 10; // 10% per stop, max 30%
+      const stopsCount = Math.max(0, locationsCount - 2);
+      const stopsHeight = Math.min(stopsCount, 3) * 10;
 
-      // Add height for ads if enabled - decreased from 32 to 25 for smaller size
-      const adsHeight = (taxidoSettingData?.taxido_values?.ads?.native_enable == 1) ? 25 : 0; // 25% for ads
+      const adsHeight = 0; // Ads disabled – no extra height
 
-      // Calculate total height
       const totalHeight = baseHeight + stopsHeight + adsHeight;
 
-      // Ensure minimum and maximum bounds - decreased max from 90 to 85
-      const finalHeight = Math.min(Math.max(totalHeight, 42), 85); // Between 42% and 85%
+      const finalHeight = Math.min(Math.max(totalHeight, 42), 85);
 
       return [`${finalHeight}%`];
     },
-    [rideDatas?.service?.service_category, rideDatas?.locations?.length, taxidoSettingData?.taxido_values?.ads?.native_enable]
+    [rideDatas?.service?.service_category, rideDatas?.locations?.length]
   );
+
   const sosSnapPoints = useMemo(() => ["35%"], []);
   const dispatch = useDispatch();
   const { zoneValue } = useSelector((state: any) => state.zone);
   const { sosValue } = useSelector((state: any) => state.sos);
   const { isDark, viewRTLStyle } = useValues();
   const { translateData } = useSelector((state: any) => state.setting);
-
 
   useEffect(() => {
     if (!rideId) return;
@@ -89,9 +82,8 @@ export function Payment() {
           const updatedData = snapshot.data();
           setRideData(updatedData);
 
-          // Check if payment status is COMPLETED and navigate to MyTab
           if (updatedData?.payment_status == "COMPLETED") {
-            notificationHelper('', 'Payment Complete', 'success')
+            notificationHelper('', 'Payment Complete', 'success');
             reset({
               index: 0,
               routes: [{ name: "MyTabs" }],
@@ -111,7 +103,6 @@ export function Payment() {
   useEffect(() => {
     bottomSheetRef.current?.present();
     if (zoneValue?.id) {
-      // @ts-ignore - sosData accepts zone_id parameter
       dispatch(sosData(zoneValue.id));
     }
   }, [zoneValue, dispatch]);
@@ -139,18 +130,12 @@ export function Payment() {
 
   const renderSosItem = useCallback(
     ({ item }: { item: any }) => (
-      <View
-        style={{
-          marginHorizontal: windowWidth(18),
-          borderRadius: windowHeight(5),
-        }}>
+      <View style={{ marginHorizontal: windowWidth(18), borderRadius: windowHeight(5) }}>
         <TouchableOpacity
           style={[
             componentStyles.sosItem,
             {
-              backgroundColor: isDark
-                ? appColors.darkHeader
-                : appColors.lightGray,
+              backgroundColor: isDark ? appColors.darkHeader : appColors.lightGray,
             },
           ]}
           onPress={() => handleContactPress(item.number)}>
@@ -160,9 +145,7 @@ export function Payment() {
               style={[
                 styles.sideLine,
                 {
-                  backgroundColor: isDark
-                    ? appColors.darkBorder
-                    : appColors.border,
+                  backgroundColor: isDark ? appColors.darkBorder : appColors.border,
                 },
               ]}
             />
@@ -177,7 +160,7 @@ export function Payment() {
         </TouchableOpacity>
       </View>
     ),
-    [isDark, viewRTLStyle],
+    [isDark, viewRTLStyle]
   );
 
   const renderBackdrop = useCallback(
@@ -188,7 +171,7 @@ export function Payment() {
         appearsOnIndex={0}
       />
     ),
-    [],
+    []
   );
 
   return (
@@ -196,9 +179,29 @@ export function Payment() {
       <View style={external.main}>
         <CustomBackHandler />
         <View style={{ flex: 1 }}>
-          <TouchableOpacity onPress={handleSOSPress} style={{ position: 'absolute', zIndex: 1, height: windowHeight(30), width: windowWidth(110), backgroundColor: isDark ? appColors.darkHeader : appColors.whiteColor, flexDirection: 'row', alignItems: 'center', justifyContent: 'center', top: windowHeight(15), right: windowWidth(15), borderRadius: windowHeight(5), paddingLeft: windowHeight(5), borderWidth: 1, borderColor: isDark ? appColors.darkBorder : appColors.border }} >
+          <TouchableOpacity
+            onPress={handleSOSPress}
+            style={{
+              position: 'absolute',
+              zIndex: 1,
+              height: windowHeight(30),
+              width: windowWidth(110),
+              backgroundColor: isDark ? appColors.darkHeader : appColors.whiteColor,
+              flexDirection: 'row',
+              alignItems: 'center',
+              justifyContent: 'center',
+              top: windowHeight(15),
+              right: windowWidth(15),
+              borderRadius: windowHeight(5),
+              paddingLeft: windowHeight(5),
+              borderWidth: 1,
+              borderColor: isDark ? appColors.darkBorder : appColors.border,
+            }}
+          >
             <Shield color={appColors.primary} />
-            <Text style={{ fontFamily: appFonts.medium, color: isDark ? appColors.whiteColor : appColors.primaryText, marginHorizontal: windowWidth(8) }}>Safety</Text>
+            <Text style={{ fontFamily: appFonts.medium, color: isDark ? appColors.whiteColor : appColors.primaryText, marginHorizontal: windowWidth(8) }}>
+              Safety
+            </Text>
           </TouchableOpacity>
           <Map
             markerImage={rideDatas?.vehicle_type?.vehicle_map_icon_url}
@@ -225,55 +228,122 @@ export function Payment() {
           backgroundStyle={{
             borderTopLeftRadius: 16,
             borderTopRightRadius: 16,
-            backgroundColor: isDark
-              ? appColors.darkHeader
-              : appColors.whiteColor,
+            backgroundColor: isDark ? appColors.darkHeader : appColors.whiteColor,
           }}>
           <BottomSheetView style={{ paddingHorizontal: 16 }}>
             <View style={styles.mainView}>
-              <DriverData
-                driverDetails={rideDatas}
-                duration={duration}
-              />
+              <DriverData driverDetails={rideDatas} duration={duration} />
               <View style={{ marginTop: windowHeight(4) }}>
-                {rideDatas?.locations?.length > 2 && rideDatas.locations.slice(1, -1).map((location: string, index: number) => {
-                  const actualIndex = index + 1;
-                  return (
-                    <View key={`stop-${index}`} style={[external.fd_row, { backgroundColor: isDark ? appColors.bgDark : appColors.lightGray, borderRadius: windowHeight(5), padding: windowHeight(10), marginBottom: windowHeight(6), justifyContent: 'space-between', alignItems: 'center' }]}>
-                      <View style={{ flex: 1 }}>
-                        <Text style={{ fontFamily: appFonts.semiBold, fontSize: fontSizes.FONT18, color: isDark ? appColors.whiteColor : appColors.primaryText, marginBottom: windowHeight(4) }}>{translateData.stop} {index + 1}</Text>
-                        <Text style={{ fontFamily: appFonts.regular, fontSize: fontSizes.FONT13, color: appColors.regularText }} numberOfLines={1}>
-                          {location}
-                        </Text>
+                {rideDatas?.locations?.length > 2 &&
+                  rideDatas.locations.slice(1, -1).map((location: string, index: number) => {
+                    const actualIndex = index + 1;
+                    return (
+                      <View
+                        key={`stop-${index}`}
+                        style={[
+                          external.fd_row,
+                          {
+                            backgroundColor: isDark ? appColors.bgDark : appColors.lightGray,
+                            borderRadius: windowHeight(5),
+                            padding: windowHeight(10),
+                            marginBottom: windowHeight(6),
+                            justifyContent: 'space-between',
+                            alignItems: 'center',
+                          },
+                        ]}>
+                        <View style={{ flex: 1 }}>
+                          <Text
+                            style={{
+                              fontFamily: appFonts.semiBold,
+                              fontSize: fontSizes.FONT18,
+                              color: isDark ? appColors.whiteColor : appColors.primaryText,
+                              marginBottom: windowHeight(4),
+                            }}>
+                            {translateData.stop} {index + 1}
+                          </Text>
+                          <Text style={{ fontFamily: appFonts.regular, fontSize: fontSizes.FONT13, color: appColors.regularText }} numberOfLines={1}>
+                            {location}
+                          </Text>
+                        </View>
+                        <TouchableOpacity
+                          onPress={() => handleAddressChange(actualIndex)}
+                          style={{
+                            marginLeft: windowWidth(10),
+                            paddingLeft: windowWidth(10),
+                            borderLeftWidth: 1,
+                            borderLeftColor: isDark ? appColors.darkBorder : appColors.border,
+                          }}>
+                          <Edit color={appColors.primary} />
+                        </TouchableOpacity>
                       </View>
-                      <TouchableOpacity onPress={() => handleAddressChange(actualIndex)} style={{ marginLeft: windowWidth(10), paddingLeft: windowWidth(10), borderLeftWidth: 1, borderLeftColor: isDark ? appColors.darkBorder : appColors.border }}>
-                        <Edit color={appColors.primary} />
-                      </TouchableOpacity>
-                    </View>
-                  );
-                })}
+                    );
+                  })}
 
                 {rideDatas?.locations?.[rideDatas?.locations?.length - 1] && (
-                  rideDatas?.service_category?.slug === 'ride' ||
-                  rideDatas?.service_category?.slug === 'intercity' ||
-                  rideDatas?.service_category?.slug === 'schedule'
-                ) && (
-                    <TouchableOpacity onPress={() => handleAddressChange(rideDatas.locations.length - 1)} style={[external.fd_row, { backgroundColor: isDark ? appColors.bgDark : appColors.lightGray, borderRadius: windowHeight(5), padding: windowHeight(10), justifyContent: 'space-between', alignItems: 'center' }]}>
+                  (rideDatas?.service_category?.slug === 'ride' ||
+                    rideDatas?.service_category?.slug === 'intercity' ||
+                    rideDatas?.service_category?.slug === 'schedule') && (
+                    <TouchableOpacity
+                      onPress={() => handleAddressChange(rideDatas.locations.length - 1)}
+                      style={[
+                        external.fd_row,
+                        {
+                          backgroundColor: isDark ? appColors.bgDark : appColors.lightGray,
+                          borderRadius: windowHeight(5),
+                          padding: windowHeight(10),
+                          justifyContent: 'space-between',
+                          alignItems: 'center',
+                        },
+                      ]}>
                       <View style={{ flex: 1 }}>
-                        <Text style={{ fontFamily: appFonts.semiBold, fontSize: fontSizes.FONT18, color: isDark ? appColors.whiteColor : appColors.primaryText, marginBottom: windowHeight(4) }}>{translateData.destination}</Text>
+                        <Text
+                          style={{
+                            fontFamily: appFonts.semiBold,
+                            fontSize: fontSizes.FONT18,
+                            color: isDark ? appColors.whiteColor : appColors.primaryText,
+                            marginBottom: windowHeight(4),
+                          }}>
+                          {translateData.destination}
+                        </Text>
                         <Text style={{ fontFamily: appFonts.regular, fontSize: fontSizes.FONT15, color: appColors.regularText }} numberOfLines={1}>
                           {rideDatas.locations[rideDatas.locations.length - 1]}
                         </Text>
                       </View>
-                      <TouchableOpacity onPress={() => handleAddressChange(rideDatas.locations.length - 1)} style={{ marginLeft: windowWidth(10), paddingLeft: windowWidth(10), borderLeftWidth: 1, borderLeftColor: isDark ? appColors.darkBorder : appColors.border }}>
+                      <TouchableOpacity
+                        onPress={() => handleAddressChange(rideDatas.locations.length - 1)}
+                        style={{
+                          marginLeft: windowWidth(10),
+                          paddingLeft: windowWidth(10),
+                          borderLeftWidth: 1,
+                          borderLeftColor: isDark ? appColors.darkBorder : appColors.border,
+                        }}>
                         <Edit color={appColors.primary} />
                       </TouchableOpacity>
                     </TouchableOpacity>
-                  )}
+                  )
+                )}
                 {rideDatas?.service?.service_type == 'freight' && (
-                  <View style={[external.fd_row, { backgroundColor: isDark ? appColors.bgDark : appColors.lightGray, borderRadius: windowHeight(5), padding: windowHeight(10), justifyContent: 'space-between', alignItems: 'center' }]}>
+                  <View
+                    style={[
+                      external.fd_row,
+                      {
+                        backgroundColor: isDark ? appColors.bgDark : appColors.lightGray,
+                        borderRadius: windowHeight(5),
+                        padding: windowHeight(10),
+                        justifyContent: 'space-between',
+                        alignItems: 'center',
+                      },
+                    ]}>
                     <View style={{ flex: 1 }}>
-                      <Text style={{ fontFamily: appFonts.semiBold, fontSize: fontSizes.FONT18, color: isDark ? appColors.whiteColor : appColors.primaryText, marginBottom: 4 }}>{translateData.destination}</Text>
+                      <Text
+                        style={{
+                          fontFamily: appFonts.semiBold,
+                          fontSize: fontSizes.FONT18,
+                          color: isDark ? appColors.whiteColor : appColors.primaryText,
+                          marginBottom: 4,
+                        }}>
+                        {translateData.destination}
+                      </Text>
                       <Text style={{ fontFamily: appFonts.regular, fontSize: fontSizes.FONT15, color: appColors.regularText }} numberOfLines={1}>
                         {rideDatas.locations[rideDatas.locations.length - 1]}
                       </Text>
@@ -289,9 +359,7 @@ export function Payment() {
                   marginTop: windowHeight(10),
                 }}
               />
-              {taxidoSettingData?.taxido_values?.ads?.native_enable == 1 && (
-                //<NativeAdComponent heights={windowHeight(150)} adsHeight={windowHeight(60)} />
-              )}
+              {/* Ads disabled – no native ad */}
               <View style={[styles.card2, { backgroundColor: bgFullStyle }]}>
                 <TotalFare
                   handlePress={() => handlePress(rideDatas)}
@@ -329,7 +397,7 @@ export function Payment() {
           </BottomSheetView>
           <BottomSheetFlatList
             data={sosValue?.data}
-            keyExtractor={item => item.id.toString()}
+            keyExtractor={(item) => item.id.toString()}
             renderItem={renderSosItem}
             style={{ marginTop: windowHeight(20) }}
           />
