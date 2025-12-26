@@ -1,0 +1,12 @@
+diff --git a/node_modules/react-native-svg/android/build.gradle b/node_modules/react-native-svg/android/build.gradle
+index a4a57b5..866a534 100644
+--- a/node_modules/react-native-svg/android/build.gradle
++++ b/node_modules/react-native-svg/android/build.gradle
+@@ -87,7 +87,6 @@ repositories {
+ 
+ dependencies {
+     if (isNewArchitectureEnabled()) {
+-        implementation project(":ReactAndroid")
+     } else {
+         implementation 'com.facebook.react:react-native:+'
+     }
