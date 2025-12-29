@@ -17,12 +17,6 @@ project.ext.react = [
 ]
 
 android {
-    react {
-    // Force old architecture (disable New Arch completely)
-    jsEngine = "jsc"  // or "hermes" if you use Hermes
-    // Explicitly disable New Architecture features
-    newArchEnabled = false
-}
     ndkVersion rootProject.ext.ndkVersion
     buildToolsVersion rootProject.ext.buildToolsVersion
     compileSdk rootProject.ext.compileSdkVersion
