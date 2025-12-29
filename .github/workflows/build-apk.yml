@@ -30,15 +30,18 @@ jobs:
       - name: Make gradlew executable
         run: chmod +x ./android/gradlew
 
-      - name: Clean Gradle
+      - name: Clear Gradle cache & clean
         run: |
           cd android
           ./gradlew clean
           cd ..
 
-      - name: Install NDK
+      - name: Accept SDK Licenses
         run: |
           echo "y" | $ANDROID_HOME/cmdline-tools/latest/bin/sdkmanager --licenses > /dev/null
+
+      - name: Install NDK
+        run: |
           $ANDROID_HOME/cmdline-tools/latest/bin/sdkmanager "ndk;27.1.12297006"
 
       - name: Decode Keystore
