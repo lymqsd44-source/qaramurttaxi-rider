@@ -39,7 +39,8 @@ android {
         }
 
         release {
-            // Path from android/ directory (Gradle runs from here)
+            // Correct path: the file is in android/app/ from project root
+            // Gradle runs from android/, so relative path is "app/qaramurt-keystore.jks"
             storeFile file("app/qaramurt-keystore.jks")
             storePassword "123456"
             keyAlias "qaramurt"
@@ -63,17 +64,13 @@ android {
 dependencies {
     implementation("com.facebook.react:react-android")
 
-    // Firebase - latest stable BOM
     implementation platform('com.google.firebase:firebase-bom:33.1.2')
     implementation 'com.google.firebase:firebase-analytics-ktx'
     implementation 'com.google.firebase:firebase-auth'
 
-    // Google Play Services Auth
     implementation 'com.google.android.gms:play-services-auth:21.2.0'
 
-    // Use JSC (Hermes disabled in gradle.properties)
     implementation jscFlavor
 
-    // MultiDex
     implementation 'androidx.multidex:multidex:2.0.1'
 }
