@@ -27,11 +27,9 @@ jobs:
       - name: Install dependencies
         run: npm install --legacy-peer-deps
 
-      # IMPORTANT: Make gradlew executable BEFORE any Gradle command
       - name: Make gradlew executable
         run: chmod +x ./android/gradlew
 
-      # Now safe to run Gradle commands
       - name: Clear Gradle cache & clean
         run: |
           cd android
@@ -46,7 +44,7 @@ jobs:
         run: |
           $ANDROID_HOME/cmdline-tools/latest/bin/sdkmanager "ndk;27.1.12297006"
 
-      - name: Decode Keystore
+      - name: Decode Keystore from Secret
         run: echo "${{ secrets.KEYSTORE_BASE64 }}" | base64 --decode > android/app/qaramurt-keystore.jks
 
       - name: Build Signed APK
