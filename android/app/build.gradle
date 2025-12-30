@@ -39,13 +39,11 @@ android {
         }
 
         release {
-            // Keystore file is committed in the repo
+            // Keystore is committed in android/app/
+            // Path from android/ directory (where Gradle runs)
             storeFile file("app/qaramurt-keystore.jks")
-            // Replace with your actual keystore password
             storePassword "qaramurt@toychpro.kz"
-            // Alias from keytool output
             keyAlias "qaramurt"
-            // Usually same as keystore password — replace if different
             keyPassword "qaramurt@toychpro.kz"
         }
     }
@@ -73,7 +71,7 @@ dependencies {
     // Google Play Services Auth
     implementation 'com.google.android.gms:play-services-auth:21.2.0'
 
-    // Use JSC (Hermes disabled)
+    // Use JSC (Hermes disabled in gradle.properties)
     implementation jscFlavor
 
     // MultiDex
