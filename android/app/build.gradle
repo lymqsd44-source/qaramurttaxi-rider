@@ -39,9 +39,10 @@ android {
         }
 
         release {
-            // The keystore is decoded to android/app/qaramurt-keystore.jks
-            // Gradle runs from android/ directory, so we need to go up one level
-            storeFile file("../app/qaramurt-keystore.jks")
+            // Keystore is decoded to: project_root/android/app/qaramurt-keystore.jks
+            // Gradle executes from: project_root/android/
+            // So the correct relative path is: app/qaramurt-keystore.jks
+            storeFile file("app/qaramurt-keystore.jks")
             storePassword System.getenv("STORE_PASSWORD")
             keyAlias System.getenv("KEY_ALIAS")
             keyPassword System.getenv("KEY_PASSWORD")
