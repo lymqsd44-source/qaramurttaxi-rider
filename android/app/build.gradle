@@ -24,7 +24,7 @@ android {
     defaultConfig {
         applicationId "com.qaramurttaxi"
 
-        minSdk 23
+        minSdk 24
         targetSdk 34   // ✅ OK to keep 34
 
         versionCode 1
@@ -115,5 +115,5 @@ dependencies {
 
     // Multidex
     implementation "androidx.multidex:multidex:2.0.1"
-    
+
     }
