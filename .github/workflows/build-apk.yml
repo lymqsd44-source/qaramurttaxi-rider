@@ -25,7 +25,21 @@ jobs:
         uses: actions/checkout@v4
 
       # -----------------------------
-      # 2️⃣ Set up Java 17 (CRITICAL)
+      # 2️⃣ Set up Node.js (REQUIRED FOR RN)
+      # -----------------------------
+      - name: Setup Node.js
+        uses: actions/setup-node@v3
+        with:
+          node-version: 18
+
+      # -----------------------------
+      # 3️⃣ Install Node dependencies
+      # -----------------------------
+      - name: Install dependencies
+        run: npm install
+
+      # -----------------------------
+      # 4️⃣ Set up Java 17
       # -----------------------------
       - name: Set up Java 17
         uses: actions/setup-java@v4
@@ -34,7 +48,7 @@ jobs:
           java-version: 17
 
       # -----------------------------
-      # 3️⃣ Decode release keystore (OPTION 1)
+      # 5️⃣ Decode release keystore
       # -----------------------------
       - name: Decode release keystore
         run: |
@@ -43,7 +57,7 @@ jobs:
           ls -la android/app
 
       # -----------------------------
-      # 4️⃣ Setup Android SDK
+      # 6️⃣ Setup Android SDK
       # -----------------------------
       - name: Setup Android SDK
         uses: android-actions/setup-android@v3
@@ -53,14 +67,13 @@ jobs:
           sdkmanager "platforms;android-34" "build-tools;34.0.0"
 
       # -----------------------------
-      # 5️⃣ Fix Gradle wrapper permission (CRITICAL)
+      # 7️⃣ Fix Gradle wrapper permission
       # -----------------------------
       - name: Make gradlew executable
-        run: |
-          chmod +x android/gradlew
+        run: chmod +x android/gradlew
 
       # -----------------------------
-      # 6️⃣ Clean Gradle
+      # 8️⃣ Clean Gradle
       # -----------------------------
       - name: Clean Gradle
         run: |
@@ -70,7 +83,7 @@ jobs:
           rm -rf ~/.gradle/daemon
 
       # -----------------------------
-      # 7️⃣ Build Signed APK
+      # 9️⃣ Build Signed APK
       # -----------------------------
       - name: Build Release APK
         run: |
@@ -78,7 +91,7 @@ jobs:
           ./gradlew assembleRelease --no-daemon --stacktrace
 
       # -----------------------------
-      # 8️⃣ Upload APK artifact
+      # 🔟 Upload APK artifact
       # -----------------------------
       - name: Upload APK
         uses: actions/upload-artifact@v4
