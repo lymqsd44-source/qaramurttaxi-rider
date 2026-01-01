@@ -39,23 +39,22 @@ android {
         }
 
         release {
-            // Correct path: the file is in android/app/ from project root
-            // Gradle runs from android/, so relative path is "app/qaramurt-keystore.jks"
+            // Real signed release config (using secrets in CI)
             storeFile file("app/qaramurt-keystore.jks")
-            storePassword "123456"
-            keyAlias "qaramurt"
-            keyPassword "123456"
+            storePassword System.getenv("STORE_PASSWORD")
+            keyAlias System.getenv("KEY_ALIAS")
+            keyPassword System.getenv("KEY_PASSWORD")
             storeType "pkcs12"
         }
     }
 
-            buildTypes {
+    buildTypes {
         debug {
             signingConfig signingConfigs.debug
         }
         release {
-            signingConfig signingConfigs.debug  // Immediate success
-            minifyEnabled false
+            signingConfig signingConfigs.release  // Real signed release
+            minifyEnabled enableProguardInReleaseBuilds
             proguardFiles getDefaultProguardFile("proguard-android.txt"), "proguard-rules.pro"
         }
     }
