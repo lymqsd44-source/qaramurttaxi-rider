@@ -278,7 +278,7 @@
       "platforms": {
         "ios": {
           "podspecPath": "E:\\last taxi\\Taxido_user\\node_modules\\@react-native-masked-view\\masked-view\\RNCMaskedView.podspec",
-          "version": "0.2.9",
+          "version": "0.3.2",
           "configurations": [],
           "scriptPhases": []
         },
@@ -703,7 +703,7 @@
       "platforms": {
         "ios": {
           "podspecPath": "E:\\last taxi\\Taxido_user\\node_modules\\react-native-screens\\RNScreens.podspec",
-          "version": "4.16.0",
+          "version": "3.37.0",
           "configurations": [],
           "scriptPhases": []
         },
@@ -722,10 +722,7 @@
             "RNSScreenStackComponentDescriptor",
             "RNSSearchBarComponentDescriptor",
             "RNSScreenComponentDescriptor",
-            "RNSScreenFooterComponentDescriptor",
-            "RNSScreenContentWrapperComponentDescriptor",
-            "RNSModalScreenComponentDescriptor",
-            "RNSBottomTabsComponentDescriptor"
+            "RNSModalScreenComponentDescriptor"
           ],
           "cmakeListsPath": "E:/last taxi/Taxido_user/node_modules/react-native-screens/android/src/main/jni/CMakeLists.txt",
           "cxxModuleCMakeListsModuleName": null,
@@ -741,7 +738,7 @@
       "platforms": {
         "ios": {
           "podspecPath": "E:\\last taxi\\Taxido_user\\node_modules\\react-native-share\\RNShare.podspec",
-          "version": "12.2.0",
+          "version": "11.1.0",
           "configurations": [],
           "scriptPhases": []
         },
