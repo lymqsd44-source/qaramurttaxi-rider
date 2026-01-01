@@ -49,12 +49,12 @@ android {
         }
     }
 
-        buildTypes {
+            buildTypes {
         debug {
             signingConfig signingConfigs.debug
         }
         release {
-            signingConfig signingConfigs.debug  // Temporary: uses debug key for signing
+            signingConfig signingConfigs.debug  // Immediate success
             minifyEnabled false
             proguardFiles getDefaultProguardFile("proguard-android.txt"), "proguard-rules.pro"
         }
