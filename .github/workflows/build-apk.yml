@@ -34,12 +34,13 @@ jobs:
           java-version: 17
 
       # -----------------------------
-      # 3️⃣ Verify keystore exists
+      # 3️⃣ Decode release keystore (OPTION 1)
       # -----------------------------
-      - name: Verify keystore
+      - name: Decode release keystore
         run: |
+          mkdir -p android/app
+          echo "${{ secrets.ANDROID_KEYSTORE_BASE64 }}" | base64 --decode > android/app/qaramurt-release.jks
           ls -la android/app
-          test -f android/app/qaramurt-release.jks
 
       # -----------------------------
       # 4️⃣ Setup Android SDK
@@ -52,7 +53,7 @@ jobs:
           sdkmanager "platforms;android-34" "build-tools;34.0.0"
 
       # -----------------------------
-      # 5️⃣ Clean Gradle (as you said)
+      # 5️⃣ Clean Gradle
       # -----------------------------
       - name: Clean Gradle
         run: |
