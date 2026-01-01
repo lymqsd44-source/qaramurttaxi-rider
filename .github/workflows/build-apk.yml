@@ -36,13 +36,11 @@ jobs:
           ./gradlew clean
           cd ..
 
-      - name: Accept SDK Licenses
+      - name: Accept SDK Licenses and Install Preferred NDK
         run: |
           echo "y" | $ANDROID_HOME/cmdline-tools/latest/bin/sdkmanager --licenses > /dev/null
-
-      - name: Install NDK
-        run: |
-          $ANDROID_HOME/cmdline-tools/latest/bin/sdkmanager "ndk;27.0.12077973"
+          # Install preferred NDK for RN 0.77 + retry for network issues
+          $ANDROID_HOME/cmdline-tools/latest/bin/sdkmanager "ndk;27.0.12077973" || $ANDROID_HOME/cmdline-tools/latest/bin/sdkmanager "ndk;27.0.12077973"
 
       - name: Decode Keystore from Secret
         run: echo "${{ secrets.KEYSTORE_BASE64 }}" | base64 --decode > android/app/qaramurt-keystore.jks
