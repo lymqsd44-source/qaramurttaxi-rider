@@ -7,7 +7,7 @@ apply plugin: "com.google.gms.google-services"
  * React Native configuration
  */
 react {
-    newArchEnabled = false
+    newArchEnabled = false  // Keeping old architecture as per your current setup
     autolinkLibrariesWithApp()
 }
 
@@ -16,23 +16,30 @@ def jscFlavor = "org.webkit:android-jsc:+"
 
 android {
     namespace "com.qaramurttaxi"
-
     compileSdk 35
     buildToolsVersion "35.0.0"
 
     defaultConfig {
         applicationId "com.qaramurttaxi"
+<<<<<<< HEAD
         minSdk 23
         targetSdk 34
 
+=======
+        minSdk 24
+        targetSdk 34
+>>>>>>> 42b9df0594b0e577ac541d55534f38c72d4482de
         versionCode 1
         versionName "2.0.0"
-
         multiDexEnabled true
     }
 
     /**
+<<<<<<< HEAD
      * 🔐 Signing Configs – Safe & Simple
+=======
+     * 🔐 Signing Configs – Improved & Secure
+>>>>>>> 42b9df0594b0e577ac541d55534f38c72d4482de
      */
     signingConfigs {
         debug {
@@ -43,6 +50,7 @@ android {
         }
 
         release {
+<<<<<<< HEAD
             // Use environment variables if available (for CI or manual signed builds)
             // Fall back to debug signing if no keystore info is provided (prevents build crash)
             if (System.getenv("MYAPP_UPLOAD_STORE_FILE") &&
@@ -56,6 +64,21 @@ android {
                 keyPassword System.getenv("MYAPP_UPLOAD_KEY_PASSWORD")
             } else {
                 // Safe fallback – use debug keystore (build will succeed even without release keys)
+=======
+            // Only load release signing if environment variables exist (CI or local signed build)
+            // This prevents errors when running debug builds
+            if (System.getenv("KEYSTORE_PATH") &&
+                System.getenv("STORE_PASSWORD") &&
+                System.getenv("KEY_ALIAS") &&
+                System.getenv("KEY_PASSWORD")) {
+
+                storeFile file(System.getenv("KEYSTORE_PATH"))
+                storePassword System.getenv("STORE_PASSWORD")
+                keyAlias System.getenv("KEY_ALIAS")
+                keyPassword System.getenv("KEY_PASSWORD")
+            } else {
+                // Fallback: use debug signing if release keys not provided (safe for local testing)
+>>>>>>> 42b9df0594b0e577ac541d55534f38c72d4482de
                 storeFile file("debug.keystore")
                 storePassword "android"
                 keyAlias "androiddebugkey"
@@ -70,12 +93,24 @@ android {
         }
 
         release {
+<<<<<<< HEAD
             // Only use real release signing when keystore info is provided
             if (System.getenv("MYAPP_UPLOAD_STORE_PASSWORD")) {
                 signingConfig signingConfigs.release
             } else {
                 signingConfig signingConfigs.debug
             }
+=======
+            // Use release signing only if real keys are available
+            if (System.getenv("STORE_PASSWORD")) {
+                signingConfig signingConfigs.release
+            } else {
+                signingConfig signingConfigs.debug  // Safe fallback
+            }
+
+            minifyEnabled enableProguardInReleaseBuilds
+            shrinkResources enableProguardInReleaseBuilds
+>>>>>>> 42b9df0594b0e577ac541d55534f38c72d4482de
 
             minifyEnabled enableProguardInReleaseBuilds
             shrinkResources enableProguardInReleaseBuilds
@@ -84,6 +119,12 @@ android {
         }
     }
 
+<<<<<<< HEAD
+=======
+    /**
+     * Java & Kotlin Compatibility
+     */
+>>>>>>> 42b9df0594b0e577ac541d55534f38c72d4482de
     compileOptions {
         sourceCompatibility JavaVersion.VERSION_17
         targetCompatibility JavaVersion.VERSION_17
@@ -93,6 +134,12 @@ android {
         jvmTarget = "17"
     }
 
+<<<<<<< HEAD
+=======
+    /**
+     * Prevent duplicate META-INF crashes (common with many libraries)
+     */
+>>>>>>> 42b9df0594b0e577ac541d55534f38c72d4482de
     packaging {
         resources {
             excludes += [
@@ -101,7 +148,13 @@ android {
                 "META-INF/AL2.0",
                 "META-INF/LGPL2.1",
                 "META-INF/*.kotlin_module",
+<<<<<<< HEAD
                 "META-INF/DEPENDENCIES"
+=======
+                "META-INF/DEPENDENCIES",
+                "META-INF/NOTICE",
+                "META-INF/LICENSE"
+>>>>>>> 42b9df0594b0e577ac541d55534f38c72d4482de
             ]
         }
     }
@@ -110,13 +163,18 @@ android {
 dependencies {
     implementation("com.facebook.react:react-android")
 
+<<<<<<< HEAD
     // Firebase BoM – latest stable
+=======
+    // Firebase BoM – Updated to latest stable as of Jan 2026
+>>>>>>> 42b9df0594b0e577ac541d55534f38c72d4482de
     implementation platform("com.google.firebase:firebase-bom:33.12.0")
     implementation "com.google.firebase:firebase-analytics-ktx"
     implementation "com.google.firebase:firebase-auth-ktx"
     implementation "com.google.firebase:firebase-messaging-ktx"
     implementation "com.google.firebase:firebase-firestore-ktx"
 
+<<<<<<< HEAD
     // Google Sign-In
     implementation "com.google.android.gms:play-services-auth:21.3.0"
 
@@ -124,5 +182,14 @@ dependencies {
     implementation jscFlavor
 
     // MultiDex
+=======
+    // Google Play Services Auth (latest compatible)
+    implementation "com.google.android.gms:play-services-auth:21.3.0"
+
+    // JSC for better performance (optional but recommended)
+    implementation jscFlavor
+
+    // MultiDex support
+>>>>>>> 42b9df0594b0e577ac541d55534f38c72d4482de
     implementation "androidx.multidex:multidex:2.0.1"
 }

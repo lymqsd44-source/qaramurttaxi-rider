@@ -14,7 +14,6 @@ import { countryData, selfData, userRegistration } from "@src/api/store/actions"
 import { setValue } from "@src/utils/localstorage";
 import { useAppNavigation, useAppRoute } from "@src/utils/navigation";
 import { commonStyles } from "@src/styles/commonStyle";
-import CountryPicker from 'react-native-country-picker-modal';
 import { ValidatePhoneNumber } from "@src/utils/validation";
 import messaging from '@react-native-firebase/messaging';
 import { useNavigation, useTheme } from "@react-navigation/native";
@@ -22,6 +21,7 @@ import { CountryCodeType } from "./type";
 import { AppDispatch } from "@src/api/store";
 import { UserRegistrationPayload } from "@src/api/interface/authInterface";
 import DropDownPicker from "react-native-dropdown-picker";
+import { CountryPicker } from "react-native-country-codes-picker";
 
 export function SignUp() {
   const { isDark, textRTLStyle, setToken, viewRTLStyle, isRTL } = useValues();
@@ -59,7 +59,7 @@ export function SignUp() {
   const [value, setValue1] = useState<string | null>("")
   const [items, setItems] = useState<any[]>([])
   const [countryError, setCountryError] = useState<string>('');
-
+  const [showCountryPicker, setShowCountryPicker] = useState(false);
 
   useEffect(() => {
     dispatch(countryData());
@@ -184,10 +184,12 @@ export function SignUp() {
   };
 
 
-  const [visible, setVisible] = useState(false);
-  const onSelect = (country: any) => {
-    setCountryCode(country);
-    setVisible(false);
+  const onSelectCountry = (country: any) => {
+    setCountryCode({
+      callingCode: [country.dial_code.replace('+', '')],
+      cca2: country.code,
+    });
+    setShowCountryPicker(false);
   };
 
   useEffect(() => {
@@ -275,27 +277,13 @@ export function SignUp() {
                       >
 
                         <View>
-                          <TouchableOpacity style={styles.pickerButton} onPress={() => {
-                            if (isEmailUser) {
-                              setVisible(true);
-                            }
-                            else {
-                              setVisible(false)
-                            }
-                          }}>
-                            <CountryPicker
-                              countryCode={countryCode.cca2}
-                              withFilter={true}
-                              withFlag={true}
-                              withCallingCode={true}
-                              withAlphaFilter={true}
-                              withEmoji={true}
-                              onSelect={onSelect}
-                              visible={visible}
-                              onClose={() => setVisible(false)}
-                              withFlagButton={false}
-                            />
-
+                          <TouchableOpacity 
+                            style={styles.pickerButton} 
+                            onPress={() => {
+                              if (isEmailUser) {
+                                setShowCountryPicker(true);
+                              }
+                            }}>
                             <Text style={[styles.codeText, { color: isDark ? appColors.whiteColor : appColors.primaryText }]}>
                               +{countryCode.callingCode[0]}
                             </Text>
@@ -338,6 +326,14 @@ export function SignUp() {
                   </View>
                 </View>
 
+                <CountryPicker
+                  show={showCountryPicker}
+                  pickerButtonOnPress={(item) => {
+                    onSelectCountry(item);
+                  }}
+                  enableModalAvoiding={true}
+                  lang="en"
+                />
 
                 <Text style={[styles.numberTitle, { marginBottom: windowHeight(5) }, { textAlign: textRTLStyle, color: isDark ? appColors.whiteColor : appColors.primaryText }]}>
                   {translateData.countryTitle}
@@ -549,4 +545,3 @@ export function SignUp() {
     </ScrollView >
   );
 }
-
