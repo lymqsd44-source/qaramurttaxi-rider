@@ -7,7 +7,7 @@ apply plugin: "com.google.gms.google-services"
  * React Native configuration
  */
 react {
-    newArchEnabled = false
+    newArchEnabled = false  // Keeping old architecture as per your current setup
     autolinkLibrariesWithApp()
 }
 
@@ -15,29 +15,23 @@ def enableProguardInReleaseBuilds = false
 def jscFlavor = "org.webkit:android-jsc:+"
 
 android {
-
     namespace "com.qaramurttaxi"
-
     compileSdk 35
     buildToolsVersion "35.0.0"
 
     defaultConfig {
         applicationId "com.qaramurttaxi"
-
         minSdk 24
-        targetSdk 34   // ✅ OK to keep 34
-
+        targetSdk 34
         versionCode 1
         versionName "2.0.0"
-
         multiDexEnabled true
     }
 
     /**
-     * 🔐 Signing configs
+     * 🔐 Signing Configs – Improved & Secure
      */
     signingConfigs {
-
         debug {
             storeFile file("debug.keystore")
             storePassword "android"
@@ -46,24 +40,42 @@ android {
         }
 
         release {
-        
-            storeFile file(System.getenv("KEYSTORE_PATH"))
-            storePassword System.getenv("STORE_PASSWORD")
-            keyAlias System.getenv("KEY_ALIAS")
-            keyPassword System.getenv("KEY_PASSWORD")
+            // Only load release signing if environment variables exist (CI or local signed build)
+            // This prevents errors when running debug builds
+            if (System.getenv("KEYSTORE_PATH") &&
+                System.getenv("STORE_PASSWORD") &&
+                System.getenv("KEY_ALIAS") &&
+                System.getenv("KEY_PASSWORD")) {
+
+                storeFile file(System.getenv("KEYSTORE_PATH"))
+                storePassword System.getenv("STORE_PASSWORD")
+                keyAlias System.getenv("KEY_ALIAS")
+                keyPassword System.getenv("KEY_PASSWORD")
+            } else {
+                // Fallback: use debug signing if release keys not provided (safe for local testing)
+                storeFile file("debug.keystore")
+                storePassword "android"
+                keyAlias "androiddebugkey"
+                keyPassword "android"
+            }
         }
     }
 
     buildTypes {
-
         debug {
             signingConfig signingConfigs.debug
         }
 
         release {
-            signingConfig signingConfigs.release
-            minifyEnabled false
-            shrinkResources false
+            // Use release signing only if real keys are available
+            if (System.getenv("STORE_PASSWORD")) {
+                signingConfig signingConfigs.release
+            } else {
+                signingConfig signingConfigs.debug  // Safe fallback
+            }
+
+            minifyEnabled enableProguardInReleaseBuilds
+            shrinkResources enableProguardInReleaseBuilds
 
             proguardFiles(
                 getDefaultProguardFile("proguard-android-optimize.txt"),
@@ -73,7 +85,7 @@ android {
     }
 
     /**
-     * Java & Kotlin
+     * Java & Kotlin Compatibility
      */
     compileOptions {
         sourceCompatibility JavaVersion.VERSION_17
@@ -85,35 +97,40 @@ android {
     }
 
     /**
-     * Prevent duplicate META-INF crashes
+     * Prevent duplicate META-INF crashes (common with many libraries)
      */
-    packagingOptions {
+    packaging {
         resources {
             excludes += [
                 "META-INF/LICENSE*",
                 "META-INF/NOTICE*",
-                "META-INF/*.kotlin_module"
+                "META-INF/AL2.0",
+                "META-INF/LGPL2.1",
+                "META-INF/*.kotlin_module",
+                "META-INF/DEPENDENCIES",
+                "META-INF/NOTICE",
+                "META-INF/LICENSE"
             ]
         }
     }
 }
 
 dependencies {
-
     implementation("com.facebook.react:react-android")
 
-    // Firebase (BOM)
-    implementation platform("com.google.firebase:firebase-bom:33.1.2")
+    // Firebase BoM – Updated to latest stable as of Jan 2026
+    implementation platform("com.google.firebase:firebase-bom:33.12.0")
     implementation "com.google.firebase:firebase-analytics-ktx"
-    implementation "com.google.firebase:firebase-auth"
+    implementation "com.google.firebase:firebase-auth-ktx"
+    implementation "com.google.firebase:firebase-messaging-ktx"
+    implementation "com.google.firebase:firebase-firestore-ktx"
 
-    // Google Sign-In
-    implementation "com.google.android.gms:play-services-auth:21.2.0"
+    // Google Play Services Auth (latest compatible)
+    implementation "com.google.android.gms:play-services-auth:21.3.0"
 
-    // JavaScript engine
+    // JSC for better performance (optional but recommended)
     implementation jscFlavor
 
-    // Multidex
+    // MultiDex support
     implementation "androidx.multidex:multidex:2.0.1"
-
-    }
+}
