@@ -28,56 +28,44 @@ jobs:
         distribution: 'temurin'
         java-version: 17
 
-    # ---------- GRADLE CACHE ----------
-    - name: Restore Gradle cache
-      uses: actions/cache@v4
-      with:
-        path: |
-          ~/.gradle/caches
-          ~/.gradle/wrapper
-        key: gradle-${{ runner.os }}-${{ hashFiles('android/**/*.gradle*') }}
-        restore-keys: gradle-${{ runner.os }}
-
     # ---------- INSTALL ----------
     - name: Install npm dependencies
       run: |
         npm install --legacy-peer-deps --no-audit --no-fund
 
-    # ---------- FIX PERMISSIONS ----------
+    # ---------- FIX PERMISSION ----------
     - name: Make gradlew executable
       run: chmod +x android/gradlew
 
-    # ---------- CLEAN (SAFE) ----------
-    - name: Clean Android build
-      run: |
-        cd android
-        ./gradlew clean
-
     # ---------- KEYSTORE ----------
-    - name: Decode release keystore
+    - name: Decode keystore
       run: |
         echo "${{ secrets.KEYSTORE_BASE64 }}" | base64 --decode > android/app/release.keystore
 
-    - name: Export signing env vars
+    - name: Export signing env
       run: |
         echo "KEYSTORE_PASSWORD=${{ secrets.KEYSTORE_PASSWORD }}" >> $GITHUB_ENV
         echo "KEY_ALIAS=${{ secrets.KEY_ALIAS }}" >> $GITHUB_ENV
         echo "KEY_PASSWORD=${{ secrets.KEY_PASSWORD }}" >> $GITHUB_ENV
 
+    # ---------- CLEAN ----------
+    - name: Clean Android build
+      working-directory: android
+      run: ./gradlew clean
+
     # ---------- BUILD ----------
     - name: Assemble signed APK
       working-directory: android
-      run: |
-        ./gradlew assembleRelease --no-daemon
+      run: ./gradlew assembleRelease --no-daemon --stacktrace
 
     # ---------- VERIFY ----------
-    - name: Verify APK output
+    - name: Verify APK
       run: |
         ls -lh android/app/build/outputs/apk/release/
 
     # ---------- UPLOAD ----------
-    - name: Upload APK artifact
+    - name: Upload APK
       uses: actions/upload-artifact@v4
       with:
-        name: app-release-signed
+        name: signed-apk
         path: android/app/build/outputs/apk/release/app-release.apk
