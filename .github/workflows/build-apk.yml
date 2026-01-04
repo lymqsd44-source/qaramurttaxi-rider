@@ -11,29 +11,24 @@ jobs:
     timeout-minutes: 60
 
     steps:
-    - name: Checkout repository
-      uses: actions/checkout@v4
+    - uses: actions/checkout@v4
 
-    # ---------- NODE ----------
-    - name: Setup Node.js
-      uses: actions/setup-node@v4
+    # ---------- ENV ----------
+    - uses: actions/setup-node@v4
       with:
         node-version: 20
-        cache: 'npm'
+        cache: npm
 
-    # ---------- JAVA ----------
-    - name: Setup Java
-      uses: actions/setup-java@v4
+    - uses: actions/setup-java@v4
       with:
-        distribution: 'temurin'
+        distribution: temurin
         java-version: 17
 
     # ---------- INSTALL ----------
-    - name: Install npm dependencies
-      run: |
-        npm install --legacy-peer-deps --no-audit --no-fund
+    - name: Install JS dependencies
+      run: npm install --legacy-peer-deps --no-audit --no-fund
 
-    # ---------- FIX PERMISSION ----------
+    # ---------- PERMISSION ----------
     - name: Make gradlew executable
       run: chmod +x android/gradlew
 
@@ -42,30 +37,33 @@ jobs:
       run: |
         echo "${{ secrets.KEYSTORE_BASE64 }}" | base64 --decode > android/app/release.keystore
 
-    - name: Export signing env
+    - name: Export signing vars
       run: |
         echo "KEYSTORE_PASSWORD=${{ secrets.KEYSTORE_PASSWORD }}" >> $GITHUB_ENV
         echo "KEY_ALIAS=${{ secrets.KEY_ALIAS }}" >> $GITHUB_ENV
         echo "KEY_PASSWORD=${{ secrets.KEY_PASSWORD }}" >> $GITHUB_ENV
 
-    # ---------- CLEAN ----------
-    - name: Clean Android build
-      working-directory: android
-      run: ./gradlew clean
-
     # ---------- BUILD ----------
-    - name: Assemble signed APK
+    - name: Build Android (APK + AAB)
       working-directory: android
-      run: ./gradlew assembleRelease --no-daemon --stacktrace
-
-    # ---------- VERIFY ----------
-    - name: Verify APK
       run: |
-        ls -lh android/app/build/outputs/apk/release/
+        pwd
+        ls
+        ./gradlew assembleRelease bundleRelease --no-daemon --stacktrace
+
+    # ---------- FIND OUTPUT ----------
+    - name: Locate build outputs
+      run: |
+        echo "APK files:"
+        find android -name "*.apk" || true
+        echo "AAB files:"
+        find android -name "*.aab" || true
 
     # ---------- UPLOAD ----------
-    - name: Upload APK
+    - name: Upload artifacts
       uses: actions/upload-artifact@v4
       with:
-        name: signed-apk
-        path: android/app/build/outputs/apk/release/app-release.apk
+        name: android-release
+        path: |
+          android/app/build/outputs/**/*.apk
+          android/app/build/outputs/**/*.aab
