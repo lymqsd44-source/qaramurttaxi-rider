@@ -8,62 +8,38 @@ on:
 jobs:
   android:
     runs-on: ubuntu-latest
-    timeout-minutes: 60
 
     steps:
     - uses: actions/checkout@v4
 
-    # ---------- ENV ----------
     - uses: actions/setup-node@v4
       with:
         node-version: 20
-        cache: npm
 
     - uses: actions/setup-java@v4
       with:
         distribution: temurin
         java-version: 17
 
-    # ---------- INSTALL ----------
-    - name: Install JS dependencies
-      run: npm install --legacy-peer-deps --no-audit --no-fund
+    - run: npm install --legacy-peer-deps --no-audit --no-fund
 
-    # ---------- PERMISSION ----------
-    - name: Make gradlew executable
-      run: chmod +x android/gradlew
+    - run: chmod +x android/gradlew
 
-    # ---------- KEYSTORE ----------
-    - name: Decode keystore
-      run: |
+    - run: |
         echo "${{ secrets.KEYSTORE_BASE64 }}" | base64 --decode > android/app/release.keystore
 
-    - name: Export signing vars
-      run: |
+    - run: |
         echo "KEYSTORE_PASSWORD=${{ secrets.KEYSTORE_PASSWORD }}" >> $GITHUB_ENV
         echo "KEY_ALIAS=${{ secrets.KEY_ALIAS }}" >> $GITHUB_ENV
         echo "KEY_PASSWORD=${{ secrets.KEY_PASSWORD }}" >> $GITHUB_ENV
 
-    # ---------- BUILD ----------
-    - name: Build Android (APK + AAB)
+    ✅ THIS IS WHAT YOU WERE MISSING
+    - name: Build Android release
       working-directory: android
-      run: |
-        pwd
-        ls
-        ./gradlew assembleRelease bundleRelease --no-daemon --stacktrace
+      run: ./gradlew assembleRelease --no-daemon
 
-    # ---------- FIND OUTPUT ----------
-    - name: Locate build outputs
-      run: |
-        echo "APK files:"
-        find android -name "*.apk" || true
-        echo "AAB files:"
-        find android -name "*.aab" || true
-
-    # ---------- UPLOAD ----------
-    - name: Upload artifacts
+    - name: Upload APK
       uses: actions/upload-artifact@v4
       with:
-        name: android-release
-        path: |
-          android/app/build/outputs/**/*.apk
-          android/app/build/outputs/**/*.aab
+        name: signed-apk
+        path: android/app/build/outputs/apk/release/app-release.apk
