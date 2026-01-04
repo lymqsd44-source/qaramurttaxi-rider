@@ -2,77 +2,89 @@ name: Build Signed Android APK
 
 on:
   push:
-    branches: [ "main" ]
+    branches:
+      - main
   workflow_dispatch:
 
 jobs:
   build:
     runs-on: ubuntu-latest
-    timeout-minutes: 60
 
     steps:
-      # 1. Checkout code
+      # ----------------------------
+      # Checkout Repository
+      # ----------------------------
       - name: Checkout code
         uses: actions/checkout@v4
 
-      # 2. Setup Node
+      # ----------------------------
+      # Setup Node
+      # ----------------------------
       - name: Setup Node.js
         uses: actions/setup-node@v4
         with:
-          node-version: 20
+          node-version: 18
+          cache: npm
 
-      # 3. Setup Java
+      # ----------------------------
+      # Install Dependencies
+      # ----------------------------
+      - name: Install npm dependencies
+        run: npm install --legacy-peer-deps --no-audit --no-fund
+
+      # ----------------------------
+      # Setup Java
+      # ----------------------------
       - name: Setup Java
         uses: actions/setup-java@v4
         with:
           distribution: temurin
           java-version: 17
 
-      # 4. Install Android SDK
-      - name: Setup Android SDK
-        uses: android-actions/setup-android@v3
-        with:
-          api-level: 33
-          build-tools: "33.0.2"
-
-      # 5. Install JS dependencies
-      - name: Install npm dependencies
-        run: npm install --legacy-peer-deps --no-audit --no-fund
-
-      # 6. Make gradlew executable
-      - name: Make Gradle executable
+      # ----------------------------
+      # Make Gradle Executable
+      # ----------------------------
+      - name: Grant execute permission to Gradle
         run: chmod +x android/gradlew
 
-      # 7. Decode keystore
-      - name: Decode release keystore
+      # ----------------------------
+      # Restore Release Keystore
+      # ----------------------------
+      - name: Restore keystore
         run: |
-          echo "${{ secrets.KEYSTORE_BASE64 }}" | base64 --decode > android/app/release.keystore
+          echo "${{ secrets.ANDROID_KEYSTORE_BASE64 }}" | base64 --decode > android/app/release.keystore
 
-      # 8. Export keystore environment variables
-      - name: Export signing secrets
+      # ----------------------------
+      # Export Signing Variables
+      # ----------------------------
+      - name: Export signing environment variables
         run: |
           echo "KEYSTORE_PASSWORD=${{ secrets.KEYSTORE_PASSWORD }}" >> $GITHUB_ENV
           echo "KEY_ALIAS=${{ secrets.KEY_ALIAS }}" >> $GITHUB_ENV
           echo "KEY_PASSWORD=${{ secrets.KEY_PASSWORD }}" >> $GITHUB_ENV
 
-      # 9. Build APK
-      - name: Build release APK
+      # ----------------------------
+      # Build Signed APK (FORCED MODULE)
+      # ----------------------------
+      - name: Build signed release APK
         working-directory: android
         run: |
-          ./gradlew assembleRelease --no-daemon --stacktrace
+          ./gradlew clean
+          ./gradlew :app:assembleRelease --no-daemon --stacktrace
 
-      # 10. List outputs (debug)
-      - name: Show build outputs
+      # ----------------------------
+      # Verify APK Exists (Fail Safe)
+      # ----------------------------
+      - name: Verify APK output
         run: |
-          if [ -d android/app/build/outputs ]; then
-            find android/app/build/outputs -type f
-          else
-            echo "No outputs directory found"
-          fi
+          echo "Searching for APK files..."
+          find android -type f -name "*.apk" || true
 
-      # 11. Upload the signed APK
-      - name: Upload APK artifact
+      # ----------------------------
+      # Upload APK Artifact
+      # ----------------------------
+      - name: Upload APK
         uses: actions/upload-artifact@v4
         with:
           name: signed-release-apk
-          path: android/app/build/outputs/apk/release/app-release.apk
+          path: android/**/build/outputs/**/*.apk
