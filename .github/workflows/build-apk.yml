@@ -2,8 +2,7 @@ name: Build Signed Android APK
 
 on:
   push:
-    branches:
-      - main
+    branches: [ main ]
   workflow_dispatch:
 
 jobs:
@@ -11,80 +10,55 @@ jobs:
     runs-on: ubuntu-latest
 
     steps:
-      # ----------------------------
-      # Checkout Repository
-      # ----------------------------
-      - name: Checkout code
-        uses: actions/checkout@v4
+      - uses: actions/checkout@v4
 
-      # ----------------------------
-      # Setup Node
-      # ----------------------------
-      - name: Setup Node.js
+      - name: Setup Node
         uses: actions/setup-node@v4
         with:
           node-version: 18
           cache: npm
 
-      # ----------------------------
-      # Install Dependencies
-      # ----------------------------
-      - name: Install npm dependencies
+      - name: Install dependencies
         run: npm install --legacy-peer-deps --no-audit --no-fund
 
-      # ----------------------------
-      # Setup Java
-      # ----------------------------
       - name: Setup Java
         uses: actions/setup-java@v4
         with:
           distribution: temurin
           java-version: 17
 
-      # ----------------------------
-      # Make Gradle Executable
-      # ----------------------------
-      - name: Grant execute permission to Gradle
+      - name: Make gradlew executable
         run: chmod +x android/gradlew
 
-      # ----------------------------
-      # Restore Release Keystore
-      # ----------------------------
+      # 🚨 FAIL FAST IF KEYSTORE IS MISSING
       - name: Restore keystore
         run: |
+          if [ -z "${{ secrets.ANDROID_KEYSTORE_BASE64 }}" ]; then
+            echo "❌ ANDROID_KEYSTORE_BASE64 is missing"
+            exit 1
+          fi
           echo "${{ secrets.ANDROID_KEYSTORE_BASE64 }}" | base64 --decode > android/app/release.keystore
 
-      # ----------------------------
-      # Export Signing Variables
-      # ----------------------------
-      - name: Export signing environment variables
+      - name: Export signing vars
         run: |
           echo "KEYSTORE_PASSWORD=${{ secrets.KEYSTORE_PASSWORD }}" >> $GITHUB_ENV
           echo "KEY_ALIAS=${{ secrets.KEY_ALIAS }}" >> $GITHUB_ENV
           echo "KEY_PASSWORD=${{ secrets.KEY_PASSWORD }}" >> $GITHUB_ENV
 
-      # ----------------------------
-      # Build Signed APK (FORCED MODULE)
-      # ----------------------------
-      - name: Build signed release APK
+      # ✅ ACTUAL BUILD STEP
+      - name: Build APK
         working-directory: android
         run: |
           ./gradlew clean
           ./gradlew :app:assembleRelease --no-daemon --stacktrace
 
-      # ----------------------------
-      # Verify APK Exists (Fail Safe)
-      # ----------------------------
-      - name: Verify APK output
+      - name: Verify APK
         run: |
-          echo "Searching for APK files..."
-          find android -type f -name "*.apk" || true
+          find android -type f -name "*.apk"
+          test -f android/app/build/outputs/apk/release/app-release.apk
 
-      # ----------------------------
-      # Upload APK Artifact
-      # ----------------------------
       - name: Upload APK
         uses: actions/upload-artifact@v4
         with:
           name: signed-release-apk
-          path: android/**/build/outputs/**/*.apk
+          path: android/app/build/outputs/apk/release/app-release.apk
