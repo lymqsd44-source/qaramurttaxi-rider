@@ -1,24 +1,9 @@
-# Node
 node_modules/
-npm-debug.log
-yarn-error.log
-yarn-debug.log
-
-# Android
-android/.gradle/
 android/app/build/
-android/build/
-android/.idea/
+android/.gradle/
 android/local.properties
-android/captures/
-
-# iOS
-ios/Pods/
-ios/build/
-ios/.xcworkspace/
-ios/Podfile.lock  # Optional, but common
-
-# React Native
-*.log
-__tests__/__snapshots__/
-.metro-*/
+.env
+*.keystore
+*.jks
+*.apk
+*.aab
