@@ -21,20 +21,24 @@ jobs:
         distribution: temurin
         java-version: 17
 
-    - run: npm install --legacy-peer-deps --no-audit --no-fund
+    - name: Install dependencies
+      run: npm install --legacy-peer-deps --no-audit --no-fund
 
-    - run: chmod +x android/gradlew
+    - name: Grant gradlew permission
+      run: chmod +x android/gradlew
 
-    - run: |
+    - name: Decode keystore
+      run: |
         echo "${{ secrets.KEYSTORE_BASE64 }}" | base64 --decode > android/app/release.keystore
 
-    - run: |
+    - name: Export signing vars
+      run: |
         echo "KEYSTORE_PASSWORD=${{ secrets.KEYSTORE_PASSWORD }}" >> $GITHUB_ENV
         echo "KEY_ALIAS=${{ secrets.KEY_ALIAS }}" >> $GITHUB_ENV
         echo "KEY_PASSWORD=${{ secrets.KEY_PASSWORD }}" >> $GITHUB_ENV
 
-    ✅ THIS IS WHAT YOU WERE MISSING
-    - name: Build Android release
+    🚨 REQUIRED BUILD STEP
+    - name: Build APK
       working-directory: android
       run: ./gradlew assembleRelease --no-daemon
 
