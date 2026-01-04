@@ -14,66 +14,70 @@ jobs:
     - name: Checkout repository
       uses: actions/checkout@v4
 
-    # ---------- ENV SETUP ----------
-    - name: Setup Node
+    # ---------- NODE ----------
+    - name: Setup Node.js
       uses: actions/setup-node@v4
       with:
-        node-version: 18
+        node-version: 20
         cache: 'npm'
 
+    # ---------- JAVA ----------
     - name: Setup Java
       uses: actions/setup-java@v4
       with:
         distribution: 'temurin'
         java-version: 17
 
-    # ---------- CACHE ----------
+    # ---------- GRADLE CACHE ----------
     - name: Restore Gradle cache
       uses: actions/cache@v4
       with:
         path: |
           ~/.gradle/caches
           ~/.gradle/wrapper
-        key: gradle-${{ runner.os }}-${{ hashFiles('**/*.gradle*') }}
+        key: gradle-${{ runner.os }}-${{ hashFiles('android/**/*.gradle*') }}
         restore-keys: gradle-${{ runner.os }}
 
     # ---------- INSTALL ----------
-    - name: Install dependencies (safe mode)
+    - name: Install npm dependencies
       run: |
         npm install --legacy-peer-deps --no-audit --no-fund
 
-    # ---------- CLEAN ----------
-    - name: Reset Metro & Gradle
+    # ---------- FIX PERMISSIONS ----------
+    - name: Make gradlew executable
+      run: chmod +x android/gradlew
+
+    # ---------- CLEAN (SAFE) ----------
+    - name: Clean Android build
       run: |
-        npx react-native-clean-project
         cd android
         ./gradlew clean
 
     # ---------- KEYSTORE ----------
-    - name: Decode keystore
+    - name: Decode release keystore
       run: |
         echo "${{ secrets.KEYSTORE_BASE64 }}" | base64 --decode > android/app/release.keystore
 
-    - name: Inject signing env
+    - name: Export signing env vars
       run: |
         echo "KEYSTORE_PASSWORD=${{ secrets.KEYSTORE_PASSWORD }}" >> $GITHUB_ENV
         echo "KEY_ALIAS=${{ secrets.KEY_ALIAS }}" >> $GITHUB_ENV
         echo "KEY_PASSWORD=${{ secrets.KEY_PASSWORD }}" >> $GITHUB_ENV
 
     # ---------- BUILD ----------
-    - name: Build signed APK
+    - name: Assemble signed APK
       working-directory: android
       run: |
-        ./gradlew assembleRelease --no-daemon --stacktrace
+        ./gradlew assembleRelease --no-daemon
 
     # ---------- VERIFY ----------
-    - name: Verify APK
+    - name: Verify APK output
       run: |
         ls -lh android/app/build/outputs/apk/release/
 
     # ---------- UPLOAD ----------
-    - name: Upload APK
+    - name: Upload APK artifact
       uses: actions/upload-artifact@v4
       with:
-        name: Signed-Release-APK
+        name: app-release-signed
         path: android/app/build/outputs/apk/release/app-release.apk
