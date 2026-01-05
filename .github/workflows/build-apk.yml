@@ -2,59 +2,76 @@ name: Build Signed Android APK
 
 on:
   push:
-    branches: [ main ]
+    branches: [ "main" ]
   workflow_dispatch:
 
 jobs:
   build:
     runs-on: ubuntu-latest
 
-    steps:
-      - uses: actions/checkout@v4
+    env:
+      JAVA_HOME: /usr/lib/jvm/temurin-17-jdk-amd64
 
-      - name: Setup Node
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v4
+
+      # ---------------------------
+      # Node (REQUIRED for React Native)
+      # ---------------------------
+      - name: Setup Node.js
         uses: actions/setup-node@v4
         with:
-          node-version: 20
+          node-version: 18
           cache: npm
 
       - name: Install JS dependencies
         run: npm install --legacy-peer-deps --no-audit --no-fund
 
+      # ---------------------------
+      # Java
+      # ---------------------------
       - name: Setup Java
         uses: actions/setup-java@v4
         with:
           distribution: temurin
           java-version: 17
 
-      - name: Make gradlew executable
+      # ---------------------------
+      # Decode keystore
+      # ---------------------------
+      - name: Decode release keystore
+        run: |
+          echo "${{ secrets.RELEASE_KEYSTORE }}" | base64 --decode > android/app/release.keystore
+
+      # ---------------------------
+      # Gradle permissions
+      # ---------------------------
+      - name: Grant Gradle permission
         run: chmod +x android/gradlew
 
-      - name: Restore keystore
-        run: |
-          echo "${{ secrets.ANDROID_KEYSTORE_BASE64 }}" | base64 --decode > android/app/release.keystore
-
-      - name: Export signing vars
-        run: |
-          echo "KEYSTORE_PATH=app/release.keystore" >> $GITHUB_ENV
-          echo "STORE_PASSWORD=${{ secrets.KEYSTORE_PASSWORD }}" >> $GITHUB_ENV
-          echo "KEY_ALIAS=${{ secrets.KEY_ALIAS }}" >> $GITHUB_ENV
-          echo "KEY_PASSWORD=${{ secrets.KEY_PASSWORD }}" >> $GITHUB_ENV
-
-      # ✅ ALL GRADLE COMMANDS RUN HERE
-      - name: Build Release APK
+      # ---------------------------
+      # Build APK (IMPORTANT STEP YOU WERE MISSING)
+      # ---------------------------
+      - name: Build signed release APK
         working-directory: android
         run: |
           ./gradlew clean
-          ./gradlew :app:assembleRelease --no-daemon --stacktrace
+          ./gradlew assembleRelease --no-daemon --stacktrace
 
-      - name: Verify APK
+      # ---------------------------
+      # Verify APK exists
+      # ---------------------------
+      - name: Verify APK output
         run: |
           ls -lh android/app/build/outputs/apk/release/
           test -f android/app/build/outputs/apk/release/app-release.apk
 
+      # ---------------------------
+      # Upload APK
+      # ---------------------------
       - name: Upload APK
         uses: actions/upload-artifact@v4
         with:
-          name: signed-release-apk
+          name: qaramurt-rider-release-apk
           path: android/app/build/outputs/apk/release/app-release.apk
