@@ -26,6 +26,19 @@ jobs:
           distribution: temurin
           java-version: 17
 
+      # 🔥 ANDROID SDK (THIS WAS MISSING)
+      - name: Setup Android SDK
+        uses: android-actions/setup-android@v3
+
+      - name: Install Android SDK packages
+        run: |
+          sdkmanager "platform-tools" \
+                     "platforms;android-35" \
+                     "build-tools;35.0.0"
+
+      - name: Accept Android licenses
+        run: yes | sdkmanager --licenses
+
       - name: Decode keystore
         run: |
           mkdir -p android/app
@@ -45,15 +58,15 @@ jobs:
         working-directory: android
         run: ./gradlew clean
 
-      # 🔥 THIS IS THE REAL BUILD COMMAND
+      # 🚀 REAL BUILD (WILL TAKE TIME NOW)
       - name: Build signed APK
         working-directory: android
         run: ./gradlew :app:assembleRelease --no-daemon --stacktrace
 
       - name: Verify APK
         run: |
-          echo "Searching APK files..."
-          find android -type f -name "*.apk"
+          echo "APK output:"
+          find android/app/build/outputs -name "*.apk"
 
       - name: Upload APK
         uses: actions/upload-artifact@v4
