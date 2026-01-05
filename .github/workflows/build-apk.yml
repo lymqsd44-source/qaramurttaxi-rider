@@ -41,6 +41,7 @@ jobs:
           echo "KEY_ALIAS=${{ secrets.KEY_ALIAS }}" >> $GITHUB_ENV
           echo "KEY_PASSWORD=${{ secrets.KEY_PASSWORD }}" >> $GITHUB_ENV
 
+      # ✅ ALL GRADLE COMMANDS RUN HERE
       - name: Build Release APK
         working-directory: android
         run: |
