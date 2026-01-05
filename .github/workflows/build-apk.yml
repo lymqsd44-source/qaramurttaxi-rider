@@ -2,7 +2,7 @@ name: Build Signed Android APK
 
 on:
   push:
-    branches: [ "main" ]
+    branches: [ main ]
   workflow_dispatch:
 
 jobs:
@@ -10,14 +10,15 @@ jobs:
     runs-on: ubuntu-latest
 
     steps:
-      - uses: actions/checkout@v4
+      - name: Checkout repo
+        uses: actions/checkout@v4
 
       - name: Setup Node
         uses: actions/setup-node@v4
         with:
           node-version: 20
 
-      - name: Install JS deps
+      - name: Install JS dependencies
         run: npm install --legacy-peer-deps --no-audit --no-fund
 
       - name: Setup Java
@@ -30,17 +31,34 @@ jobs:
         shell: bash
         run: |
           mkdir -p android/app
-          echo "${{ secrets.RELEASE_KEYSTORE }}" | base64 --decode > android/app/release.keystore
+          echo "${{ secrets.ANDROID_KEYSTORE_BASE64 }}" | base64 --decode > android/app/release.keystore
 
-      - name: Grant gradlew permission
+      - name: Export signing env vars
+        shell: bash
+        run: |
+          echo "KEYSTORE_PATH=release.keystore" >> $GITHUB_ENV
+          echo "KEYSTORE_PASSWORD=${{ secrets.KEYSTORE_PASSWORD }}" >> $GITHUB_ENV
+          echo "KEY_ALIAS=${{ secrets.KEY_ALIAS }}" >> $GITHUB_ENV
+          echo "KEY_PASSWORD=${{ secrets.KEY_PASSWORD }}" >> $GITHUB_ENV
+
+      - name: Make gradlew executable
         run: chmod +x android/gradlew
 
-      - name: Build APK
+      - name: Clean project
+        working-directory: android
+        run: ./gradlew clean
+
+      - name: Build Release APK
         working-directory: android
         run: ./gradlew assembleRelease --no-daemon --stacktrace
+
+      - name: Locate APK
+        run: |
+          echo "Searching APK files..."
+          find android -type f -name "*.apk"
 
       - name: Upload APK
         uses: actions/upload-artifact@v4
         with:
-          name: app-release
-          path: android/app/build/outputs/apk/release/app-release.apk
+          name: signed-release-apk
+          path: android/app/build/outputs/apk/release/*.apk
