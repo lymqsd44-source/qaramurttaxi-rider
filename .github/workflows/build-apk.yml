@@ -9,27 +9,24 @@ jobs:
   build:
     runs-on: ubuntu-latest
 
-    env:
-      JAVA_HOME: /usr/lib/jvm/temurin-17-jdk-amd64
-
     steps:
       - name: Checkout repository
         uses: actions/checkout@v4
 
       # ---------------------------
-      # Node (REQUIRED for React Native)
+      # Node 20 (MANDATORY)
       # ---------------------------
       - name: Setup Node.js
         uses: actions/setup-node@v4
         with:
-          node-version: 18
+          node-version: 20
           cache: npm
 
       - name: Install JS dependencies
         run: npm install --legacy-peer-deps --no-audit --no-fund
 
       # ---------------------------
-      # Java
+      # Java 17
       # ---------------------------
       - name: Setup Java
         uses: actions/setup-java@v4
@@ -51,18 +48,18 @@ jobs:
         run: chmod +x android/gradlew
 
       # ---------------------------
-      # Build APK (IMPORTANT STEP YOU WERE MISSING)
+      # BUILD APK (THIS WAS MISSING BEFORE)
       # ---------------------------
-      - name: Build signed release APK
+      - name: Build signed APK
         working-directory: android
         run: |
           ./gradlew clean
-          ./gradlew assembleRelease --no-daemon --stacktrace
+          ./gradlew assembleRelease --no-daemon
 
       # ---------------------------
-      # Verify APK exists
+      # Verify APK
       # ---------------------------
-      - name: Verify APK output
+      - name: Verify APK
         run: |
           ls -lh android/app/build/outputs/apk/release/
           test -f android/app/build/outputs/apk/release/app-release.apk
