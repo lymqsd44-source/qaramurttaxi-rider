@@ -10,14 +10,8 @@ jobs:
     runs-on: ubuntu-latest
 
     steps:
-      # ----------------------------
-      # Checkout
-      # ----------------------------
       - uses: actions/checkout@v4
 
-      # ----------------------------
-      # Node.js (RN Maps requires 20+)
-      # ----------------------------
       - name: Setup Node
         uses: actions/setup-node@v4
         with:
@@ -27,71 +21,38 @@ jobs:
       - name: Install dependencies
         run: npm install --legacy-peer-deps --no-audit --no-fund
 
-      # ----------------------------
-      # Java
-      # ----------------------------
       - name: Setup Java
         uses: actions/setup-java@v4
         with:
           distribution: temurin
           java-version: 17
 
-      # ----------------------------
-      # Gradle permissions
-      # ----------------------------
       - name: Make gradlew executable
         run: chmod +x android/gradlew
 
-      # ----------------------------
-      # Restore keystore
-      # ----------------------------
       - name: Restore keystore
         run: |
-          if [ -z "${{ secrets.ANDROID_KEYSTORE_BASE64 }}" ]; then
-            echo "❌ ANDROID_KEYSTORE_BASE64 missing"
-            exit 1
-          fi
-          mkdir -p android/app
           echo "${{ secrets.ANDROID_KEYSTORE_BASE64 }}" | base64 --decode > android/app/release.keystore
 
-      # ----------------------------
-      # Export signing vars
-      # ----------------------------
-      - name: Export signing variables
+      - name: Export signing vars
         run: |
+          echo "KEYSTORE_PATH=android/app/release.keystore" >> $GITHUB_ENV
           echo "KEYSTORE_PASSWORD=${{ secrets.KEYSTORE_PASSWORD }}" >> $GITHUB_ENV
           echo "KEY_ALIAS=${{ secrets.KEY_ALIAS }}" >> $GITHUB_ENV
           echo "KEY_PASSWORD=${{ secrets.KEY_PASSWORD }}" >> $GITHUB_ENV
 
-      # ----------------------------
-      # Debug Gradle (CRITICAL)
-      # ----------------------------
-      - name: List Gradle tasks
-        working-directory: android
-        run: ./gradlew tasks --all
-
-      # ----------------------------
-      # Build APK (SIGNED + FALLBACK)
-      # ----------------------------
+      # 🔥 THIS WAS MISSING — APK IS BUILT HERE
       - name: Build Release APK
         working-directory: android
-        run: |
-          ./gradlew clean
-          ./gradlew assembleRelease --no-daemon --stacktrace
+        run: ./gradlew :app:assembleRelease --no-daemon --stacktrace
 
-      # ----------------------------
-      # Locate APK (NO ASSUMPTIONS)
-      # ----------------------------
-      - name: Find APKs
+      - name: Verify APK
         run: |
-          echo "🔍 Searching APK outputs..."
           find android -type f -name "*.apk"
+          test -f android/app/build/outputs/apk/release/app-release.apk
 
-      # ----------------------------
-      # Upload ANY APK found
-      # ----------------------------
-      - name: Upload APKs
+      - name: Upload APK
         uses: actions/upload-artifact@v4
         with:
-          name: android-apks
-          path: android/**/build/outputs/**/*.apk
+          name: signed-release-apk
+          path: android/app/build/outputs/apk/release/app-release.apk
