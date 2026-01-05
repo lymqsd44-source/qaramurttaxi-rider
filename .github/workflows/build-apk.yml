@@ -10,8 +10,7 @@ jobs:
     runs-on: ubuntu-latest
 
     steps:
-      - name: Checkout repo
-        uses: actions/checkout@v4
+      - uses: actions/checkout@v4
 
       - name: Setup Node
         uses: actions/setup-node@v4
@@ -28,13 +27,11 @@ jobs:
           java-version: 17
 
       - name: Decode keystore
-        shell: bash
         run: |
           mkdir -p android/app
           echo "${{ secrets.ANDROID_KEYSTORE_BASE64 }}" | base64 --decode > android/app/release.keystore
 
-      - name: Export signing env vars
-        shell: bash
+      - name: Export signing vars
         run: |
           echo "KEYSTORE_PATH=release.keystore" >> $GITHUB_ENV
           echo "KEYSTORE_PASSWORD=${{ secrets.KEYSTORE_PASSWORD }}" >> $GITHUB_ENV
@@ -48,11 +45,12 @@ jobs:
         working-directory: android
         run: ./gradlew clean
 
-      - name: Build Release APK
+      # 🔥 THIS IS THE REAL BUILD COMMAND
+      - name: Build signed APK
         working-directory: android
-        run: ./gradlew assembleRelease --no-daemon --stacktrace
+        run: ./gradlew :app:assembleRelease --no-daemon --stacktrace
 
-      - name: Locate APK
+      - name: Verify APK
         run: |
           echo "Searching APK files..."
           find android -type f -name "*.apk"
