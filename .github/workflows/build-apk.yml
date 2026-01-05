@@ -1,4 +1,4 @@
-name: Build Signed Android APK
+name: Build Signed Android APK (React Native)
 
 on:
   push:
@@ -9,6 +9,9 @@ jobs:
   build:
     runs-on: ubuntu-latest
 
+    env:
+      NODE_OPTIONS: --max-old-space-size=6144
+
     steps:
       - uses: actions/checkout@v4
 
@@ -17,9 +20,15 @@ jobs:
         uses: actions/setup-node@v4
         with:
           node-version: 20
+          cache: npm
 
-      - name: Install JS dependencies
-        run: npm install --legacy-peer-deps --no-audit --no-fund
+      - name: Clean node modules
+        run: |
+          rm -rf node_modules package-lock.json
+
+      - name: Install dependencies (React Native safe)
+        run: |
+          npm install --legacy-peer-deps --no-audit --no-fund --verbose
 
       # ---------- JAVA ----------
       - name: Setup Java
@@ -46,18 +55,18 @@ jobs:
         run: |
           echo "${{ secrets.ANDROID_KEYSTORE_BASE64 }}" | base64 --decode > android/app/release.keystore
 
-      - name: Export signing variables
+      - name: Export signing vars
         run: |
           echo "KEYSTORE_PATH=release.keystore" >> $GITHUB_ENV
           echo "KEYSTORE_PASSWORD=${{ secrets.KEYSTORE_PASSWORD }}" >> $GITHUB_ENV
           echo "KEY_ALIAS=${{ secrets.KEY_ALIAS }}" >> $GITHUB_ENV
           echo "KEY_PASSWORD=${{ secrets.KEY_PASSWORD }}" >> $GITHUB_ENV
 
-      # ---------- GRADLE (FIXED) ----------
+      # ---------- GRADLE ----------
       - name: Make gradlew executable
         run: chmod +x android/gradlew
 
-      - name: Clean Android build
+      - name: Clean Android
         working-directory: android
         run: ./gradlew clean
 
@@ -66,7 +75,7 @@ jobs:
         run: ./gradlew assembleRelease --no-daemon --stacktrace
 
       # ---------- OUTPUT ----------
-      - name: List APK files
+      - name: List APK
         run: find android/app/build/outputs -name "*.apk"
 
       - name: Upload APK
