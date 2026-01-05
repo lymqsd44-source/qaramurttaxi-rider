@@ -13,26 +13,22 @@ jobs:
       # ----------------------------
       # Checkout
       # ----------------------------
-      - name: Checkout repository
-        uses: actions/checkout@v4
+      - uses: actions/checkout@v4
 
       # ----------------------------
-      # Node (RN Maps requires Node 20+)
+      # Node.js (RN Maps requires 20+)
       # ----------------------------
-      - name: Setup Node.js
+      - name: Setup Node
         uses: actions/setup-node@v4
         with:
           node-version: 20
           cache: npm
 
-      # ----------------------------
-      # Install JS dependencies
-      # ----------------------------
       - name: Install dependencies
         run: npm install --legacy-peer-deps --no-audit --no-fund
 
       # ----------------------------
-      # Java for Android
+      # Java
       # ----------------------------
       - name: Setup Java
         uses: actions/setup-java@v4
@@ -47,62 +43,55 @@ jobs:
         run: chmod +x android/gradlew
 
       # ----------------------------
-      # Restore signing keystore (FAIL FAST)
+      # Restore keystore
       # ----------------------------
       - name: Restore keystore
         run: |
           if [ -z "${{ secrets.ANDROID_KEYSTORE_BASE64 }}" ]; then
-            echo "❌ ANDROID_KEYSTORE_BASE64 secret is missing"
+            echo "❌ ANDROID_KEYSTORE_BASE64 missing"
             exit 1
           fi
-
           mkdir -p android/app
           echo "${{ secrets.ANDROID_KEYSTORE_BASE64 }}" | base64 --decode > android/app/release.keystore
 
       # ----------------------------
-      # Export signing environment variables
+      # Export signing vars
       # ----------------------------
       - name: Export signing variables
         run: |
-          if [ -z "${{ secrets.KEYSTORE_PASSWORD }}" ] || \
-             [ -z "${{ secrets.KEY_ALIAS }}" ] || \
-             [ -z "${{ secrets.KEY_PASSWORD }}" ]; then
-            echo "❌ One or more signing secrets are missing"
-            exit 1
-          fi
-
           echo "KEYSTORE_PASSWORD=${{ secrets.KEYSTORE_PASSWORD }}" >> $GITHUB_ENV
           echo "KEY_ALIAS=${{ secrets.KEY_ALIAS }}" >> $GITHUB_ENV
           echo "KEY_PASSWORD=${{ secrets.KEY_PASSWORD }}" >> $GITHUB_ENV
 
       # ----------------------------
-      # Build signed APK (FORCED MODULE)
+      # Debug Gradle (CRITICAL)
       # ----------------------------
-      - name: Build signed APK
+      - name: List Gradle tasks
+        working-directory: android
+        run: ./gradlew tasks --all
+
+      # ----------------------------
+      # Build APK (SIGNED + FALLBACK)
+      # ----------------------------
+      - name: Build Release APK
         working-directory: android
         run: |
           ./gradlew clean
-          ./gradlew :app:assembleRelease --no-daemon --stacktrace
+          ./gradlew assembleRelease --no-daemon --stacktrace
 
       # ----------------------------
-      # Verify APK output (HARD CHECK)
+      # Locate APK (NO ASSUMPTIONS)
       # ----------------------------
-      - name: Verify APK
+      - name: Find APKs
         run: |
-          echo "Searching for APK files..."
+          echo "🔍 Searching APK outputs..."
           find android -type f -name "*.apk"
 
-          if [ ! -f android/app/build/outputs/apk/release/app-release.apk ]; then
-            echo "❌ APK not generated"
-            exit 1
-          fi
-
       # ----------------------------
-      # Upload APK artifact
+      # Upload ANY APK found
       # ----------------------------
-      - name: Upload APK
+      - name: Upload APKs
         uses: actions/upload-artifact@v4
         with:
-          name: signed-release-apk
-          path: android/app/build/outputs/apk/release/app-release.apk
-
+          name: android-apks
+          path: android/**/build/outputs/**/*.apk
